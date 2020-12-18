@@ -65,8 +65,7 @@ class UpsampleConvLayer(torch.nn.Module):
 
 class InstanceNormalization(torch.nn.Module):
     """
-    Improves convergence of neural-style.
-    ref: https://arxiv.org/pdf/1607.08022.pdf
+    Creates an instance normalization block
     """
 
     def __init__(self, dim, eps=1e-9):
@@ -84,9 +83,8 @@ class InstanceNormalization(torch.nn.Module):
 
         n = x.size(2) * x.size(3)
         t = x.view(x.size(0), x.size(1), n)
-        mean = torch.mean(t, 2).unsqueeze(2).unsqueeze(3).expand_as(x)
 
-        # Calculate the biased var. torch.var returns unbiased var
+        mean = torch.mean(t, 2).unsqueeze(2).unsqueeze(3).expand_as(x)
         var = torch.var(t, 2).unsqueeze(2).unsqueeze(3).expand_as(x) * ((n - 1) / float(n))
 
         scale_broadcast = self.scale.unsqueeze(1).unsqueeze(1).unsqueeze(0)
@@ -112,16 +110,6 @@ class NNModel(torch.nn.Module):
         self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
         self.in3 = InstanceNormalization(128)
 
-
-        # Batch Normalization instead of Instance Normalization
-        # self.conv1 = ConvLayer(3, 32, kernel_size=9, stride=1)
-        # # self.in1 = InstanceNormalization(32)
-        # self.in1 = nn.BatchNorm2d(32)
-        # self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
-        # self.in2 = nn.BatchNorm2d(64)
-        # self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
-        # self.in3 = nn.BatchNorm2d(128)
-
         # # Residual layers
         self.res1 = ResidualBlock(128)
         self.res2 = ResidualBlock(128)
@@ -135,14 +123,7 @@ class NNModel(torch.nn.Module):
         self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
         self.in5 = InstanceNormalization(32)
         self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
-
-        # self.deconv1 = torch.nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1)
-        # self.in4 = nn.BatchNorm2d(64)
-        # self.deconv2 = torch.nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1)
-        # self.in5 = nn.BatchNorm2d(32)
-        # self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
-
-
+        
         # Non linear layer
         self.relu = nn.ReLU()
 
